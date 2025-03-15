@@ -34,10 +34,24 @@ lazy val root = Project(id = "bfg-parent", base = file(".")).aggregate (bfg, `bf
   )
 )
 
-lazy val `bfg-test` = project
+lazy val commonAssemblySettings = Seq(
+  assembly / assemblyMergeStrategy := {
+    // Discard everything under META-INF (including module-info.class files)
+    case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+    case _ => MergeStrategy.first
+  }
+)
 
-lazy val `bfg-library` = project.dependsOn(`bfg-test` % Test)
+lazy val `bfg-test` = project.settings(commonAssemblySettings: _*)
 
-lazy val bfg = project.enablePlugins(BuildInfoPlugin).dependsOn(`bfg-library`, `bfg-test` % Test)
+lazy val `bfg-library` = project
+  .dependsOn(`bfg-test` % Test)
+  .settings(commonAssemblySettings: _*)
 
-lazy val `bfg-benchmark` = project
+lazy val bfg = project
+  .enablePlugins(BuildInfoPlugin)
+  .dependsOn(`bfg-library`, `bfg-test` % Test)
+  .settings(commonAssemblySettings: _*)
+
+lazy val `bfg-benchmark` = project.settings(commonAssemblySettings: _*)
+
